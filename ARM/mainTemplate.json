@@ -1,6 +1,9 @@
 {
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
+    "metadata": {
+        "description": "ARM Template for Start-Any-VM-On-Connect HAProxy configuration"
+    },
     "parameters": {
         "environmentName": {
             "type": "string",
@@ -15,57 +18,151 @@
                 "description": "Location for all resources"
             }
         },
-        "mysqlRootPassword": {
-            "type": "securestring",
+        "LOCAL_PORT1": {
+            "type": "string",
+            "defaultValue": "80",
             "metadata": {
-                "description": "MySQL root password"
+                "description": "Local port 1 (mandatory)"
             }
         },
-        "storageAccountName": {
+        "BACKEND_HOST1": {
             "type": "string",
-            "defaultValue": "[format('store{0}', uniqueString(resourceGroup().id))]",
+            "defaultValue": "212.77.98.9:80",
             "metadata": {
-                "description": "Storage account name"
+                "description": "Backend host 1 (mandatory)"
+            }
+        },
+        "LOCAL_PORT2": {
+            "type": "string",
+            "defaultValue": "443",
+            "metadata": {
+                "description": "Local port 2"
+            }
+        },
+        "BACKEND_HOST2": {
+            "type": "string",
+            "defaultValue": "108.138.7.70:443",
+            "metadata": {
+                "description": "Backend host 2"
+            }
+        },
+        "LOCAL_PORT3": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Local port 3"
+            }
+        },
+        "BACKEND_HOST3": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Backend host 3"
+            }
+        },
+        "LOCAL_PORT4": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Local port 4"
+            }
+        },
+        "BACKEND_HOST4": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Backend host 4"
+            }
+        },
+        "LOCAL_PORT5": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Local port 5"
+            }
+        },
+        "BACKEND_HOST5": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Backend host 5"
+            }
+        },
+        "LOCAL_PORT6": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Local port 6"
+            }
+        },
+        "BACKEND_HOST6": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Backend host 6"
+            }
+        },
+        "LOCAL_PORT7": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Local port 7"
+            }
+        },
+        "BACKEND_HOST7": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Backend host 7"
+            }
+        },
+        "LOCAL_PORT8": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Local port 8"
+            }
+        },
+        "BACKEND_HOST8": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Backend host 8"
+            }
+        },
+        "LOCAL_PORT9": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Local port 9"
+            }
+        },
+        "BACKEND_HOST9": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Backend host 9"
+            }
+        },
+        "LOCAL_PORT10": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Local port 10"
+            }
+        },
+        "BACKEND_HOST10": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Backend host 10"
             }
         }
     },
     "variables": {
-        "dbAppName": "[concat(parameters('environmentName'), '-db')]",
-        "Application": "[concat(parameters('environmentName'), '-application')]",
-        "applicationShareName": "application",
-        "dbShareName": "database"
+        "appName": "[concat(parameters('environmentName'), '-app')]"
     },
     "resources": [
-        {
-            "type": "Microsoft.Storage/storageAccounts",
-            "apiVersion": "2023-01-01",
-            "name": "[parameters('storageAccountName')]",
-            "location": "[parameters('location')]",
-            "sku": {
-                "name": "Standard_LRS"
-            },
-            "kind": "StorageV2",
-            "properties": {
-                "supportsHttpsTrafficOnly": true,
-                "minimumTlsVersion": "TLS1_2"
-            }
-        },
-        {
-            "type": "Microsoft.Storage/storageAccounts/fileServices/shares",
-            "apiVersion": "2023-01-01",
-            "name": "[format('{0}/default/{1}', parameters('storageAccountName'), variables('applicationShareName'))]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
-            ]
-        },
-        {
-            "type": "Microsoft.Storage/storageAccounts/fileServices/shares",
-            "apiVersion": "2023-01-01",
-            "name": "[format('{0}/default/{1}', parameters('storageAccountName'), variables('dbShareName'))]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
-            ]
-        },
         {
             "type": "Microsoft.App/managedEnvironments",
             "apiVersion": "2023-05-01",
@@ -79,60 +176,17 @@
             }
         },
         {
-            "type": "Microsoft.App/managedEnvironments/storages",
-            "apiVersion": "2023-05-01",
-            "name": "[format('{0}/{1}', parameters('environmentName'), variables('applicationShareName'))]",
-            "properties": {
-                "azureFile": {
-                    "accountName": "[parameters('storageAccountName')]",
-                    "accountKey": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2023-01-01').keys[0].value]",
-                    "shareName": "[variables('applicationShareName')]",
-                    "accessMode": "ReadWrite"
-                }
-            },
-            "dependsOn": [
-                "[resourceId('Microsoft.App/managedEnvironments', parameters('environmentName'))]",
-                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]",
-                "[resourceId('Microsoft.Storage/storageAccounts/fileServices/shares', parameters('storageAccountName'), 'default', variables('applicationShareName'))]"
-            ]
-        },
-        {
-            "type": "Microsoft.App/managedEnvironments/storages",
-            "apiVersion": "2023-05-01",
-            "name": "[format('{0}/{1}', parameters('environmentName'), variables('dbShareName'))]",
-            "properties": {
-                "azureFile": {
-                    "accountName": "[parameters('storageAccountName')]",
-                    "accountKey": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2023-01-01').keys[0].value]",
-                    "shareName": "[variables('dbShareName')]",
-                    "accessMode": "ReadWrite"
-                }
-            },
-            "dependsOn": [
-                "[resourceId('Microsoft.App/managedEnvironments', parameters('environmentName'))]",
-                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]",
-                "[resourceId('Microsoft.Storage/storageAccounts/fileServices/shares', parameters('storageAccountName'), 'default', variables('dbShareName'))]"
-            ]
-        },
-        {
             "type": "Microsoft.App/containerApps",
             "apiVersion": "2023-05-01",
-            "name": "[variables('dbAppName')]",
+            "name": "[variables('appName')]",
             "location": "[parameters('location')]",
             "dependsOn": [
-                "[resourceId('Microsoft.App/managedEnvironments', parameters('environmentName'))]",
-                "[resourceId('Microsoft.App/managedEnvironments/storages', parameters('environmentName'), variables('dbShareName'))]"
+                "[resourceId('Microsoft.App/managedEnvironments', parameters('environmentName'))]"
             ],
             "properties": {
                 "managedEnvironmentId": "[resourceId('Microsoft.App/managedEnvironments', parameters('environmentName'))]",
                 "configuration": {
                     "activeRevisionsMode": "Single",
-                    "secrets": [
-                        {
-                            "name": "mysql-root-password",
-                            "value": "[parameters('mysqlRootPassword')]"
-                        }
-                    ],
                     "ingress": {
                         "external": false,
                         "targetPort": 3306,
@@ -149,117 +203,40 @@
                 "template": {
                     "containers": [
                         {
-                            "name": "mariadb",
-                            "image": "docker.io/mariadb:latest",
+                            "name": "app",
+                            "image": "mafamafa/haproxy-env-config:202501271157",
                             "env": [
                                 {
-                                    "name": "MYSQL_ROOT_PASSWORD",
-                                    "secretRef": "mysql-root-password"
+                                    "name": "LOCAL_PORT1",
+                                    "value": "[parameters('LOCAL_PORT1')]"
                                 },
                                 {
-                                    "name": "MYSQL_DATABASE",
-                                    "value": "wordpress"
+                                    "name": "BACKEND_HOST1",
+                                    "value": "[parameters('BACKEND_HOST1')]"
                                 },
-                                {
-                                    "name": "MYSQL_USER",
-                                    "value": "wordpress"
-                                },
-                                {
-                                    "name": "MYSQL_PASSWORD",
-                                    "secretRef": "mysql-root-password"
-                                }
+                                "[if(not(empty(parameters('LOCAL_PORT2'))), createObject('name', 'LOCAL_PORT2', 'value', parameters('LOCAL_PORT2')), json('null'))]",
+                                "[if(not(empty(parameters('BACKEND_HOST2'))), createObject('name', 'BACKEND_HOST2', 'value', parameters('BACKEND_HOST2')), json('null'))]",
+                                "[if(not(empty(parameters('LOCAL_PORT3'))), createObject('name', 'LOCAL_PORT3', 'value', parameters('LOCAL_PORT3')), json('null'))]",
+                                "[if(not(empty(parameters('BACKEND_HOST3'))), createObject('name', 'BACKEND_HOST3', 'value', parameters('BACKEND_HOST3')), json('null'))]",
+                                "[if(not(empty(parameters('LOCAL_PORT4'))), createObject('name', 'LOCAL_PORT4', 'value', parameters('LOCAL_PORT4')), json('null'))]",
+                                "[if(not(empty(parameters('BACKEND_HOST4'))), createObject('name', 'BACKEND_HOST4', 'value', parameters('BACKEND_HOST4')), json('null'))]",
+                                "[if(not(empty(parameters('LOCAL_PORT5'))), createObject('name', 'LOCAL_PORT5', 'value', parameters('LOCAL_PORT5')), json('null'))]",
+                                "[if(not(empty(parameters('BACKEND_HOST5'))), createObject('name', 'BACKEND_HOST5', 'value', parameters('BACKEND_HOST5')), json('null'))]",
+                                "[if(not(empty(parameters('LOCAL_PORT6'))), createObject('name', 'LOCAL_PORT6', 'value', parameters('LOCAL_PORT6')), json('null'))]",
+                                "[if(not(empty(parameters('BACKEND_HOST6'))), createObject('name', 'BACKEND_HOST6', 'value', parameters('BACKEND_HOST6')), json('null'))]",
+                                "[if(not(empty(parameters('LOCAL_PORT7'))), createObject('name', 'LOCAL_PORT7', 'value', parameters('LOCAL_PORT7')), json('null'))]",
+                                "[if(not(empty(parameters('BACKEND_HOST7'))), createObject('name', 'BACKEND_HOST7', 'value', parameters('BACKEND_HOST7')), json('null'))]",
+                                "[if(not(empty(parameters('LOCAL_PORT8'))), createObject('name', 'LOCAL_PORT8', 'value', parameters('LOCAL_PORT8')), json('null'))]",
+                                "[if(not(empty(parameters('BACKEND_HOST8'))), createObject('name', 'BACKEND_HOST8', 'value', parameters('BACKEND_HOST8')), json('null'))]",
+                                "[if(not(empty(parameters('LOCAL_PORT9'))), createObject('name', 'LOCAL_PORT9', 'value', parameters('LOCAL_PORT9')), json('null'))]",
+                                "[if(not(empty(parameters('BACKEND_HOST9'))), createObject('name', 'BACKEND_HOST9', 'value', parameters('BACKEND_HOST9')), json('null'))]",
+                                "[if(not(empty(parameters('LOCAL_PORT10'))), createObject('name', 'LOCAL_PORT10', 'value', parameters('LOCAL_PORT10')), json('null'))]",
+                                "[if(not(empty(parameters('BACKEND_HOST10'))), createObject('name', 'BACKEND_HOST10', 'value', parameters('BACKEND_HOST10')), json('null'))]"
                             ],
                             "resources": {
                                 "cpu": "0.5",
                                 "memory": "1Gi"
-                            },
-                            "volumeMounts": [
-                                {
-                                    "mountPath": "/var/lib/mysql",
-                                    "volumeName": "database-volume"
-                                }
-                            ]
-                        }
-                    ],
-                    "volumes": [
-                        {
-                            "name": "database-volume",
-                            "storageName": "[variables('dbShareName')]",
-                            "storageType": "AzureFile"
-                        }
-                    ],
-                    "scale": {
-                        "minReplicas": 0,
-                        "maxReplicas": 1
-                    }
-                }
-            }
-        },
-        {
-            "type": "Microsoft.App/containerApps",
-            "apiVersion": "2023-05-01",
-            "name": "[variables('Application')]",
-            "location": "[parameters('location')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.App/containerApps', variables('dbAppName'))]",
-                "[resourceId('Microsoft.App/managedEnvironments/storages', parameters('environmentName'), variables('applicationShareName'))]"
-            ],
-            "properties": {
-                "managedEnvironmentId": "[resourceId('Microsoft.App/managedEnvironments', parameters('environmentName'))]",
-                "configuration": {
-                    "activeRevisionsMode": "Single",
-                    "ingress": {
-                        "external": true,
-                        "targetPort": 80,
-                        "transport": "auto"
-                    },
-                    "secrets": [
-                        {
-                            "name": "wordpress-db-password",
-                            "value": "[parameters('mysqlRootPassword')]"
-                        }
-                    ]
-                },
-                "template": {
-                    "containers": [
-                        {
-                            "name": "wordpress",
-                            "image": "docker.io/wordpress:latest",
-                            "env": [
-                                {
-                                    "name": "WORDPRESS_DB_HOST",
-                                    "value": "[concat(variables('dbAppName'))]"
-                                },
-                                {
-                                    "name": "WORDPRESS_DB_USER",
-                                    "value": "wordpress"
-                                },
-                                {
-                                    "name": "WORDPRESS_DB_PASSWORD",
-                                    "secretRef": "wordpress-db-password"
-                                },
-                                {
-                                    "name": "WORDPRESS_DB_NAME",
-                                    "value": "wordpress"
-                                }
-                            ],
-                            "resources": {
-                                "cpu": "0.5",
-                                "memory": "1Gi"
-                            },
-                            "volumeMounts": [
-                                {
-                                    "mountPath": "/var/www/html",
-                                    "volumeName": "application-volume"
-                                }
-                            ]
-                        }
-                    ],
-                    "volumes": [
-                        {
-                            "name": "application-volume",
-                            "storageName": "[variables('applicationShareName')]",
-                            "storageType": "AzureFile"
+                            }
                         }
                     ],
                     "scale": {
@@ -269,11 +246,5 @@
                 }
             }
         }
-    ],
-    "outputs": {
-        "applicationUrl": {
-            "type": "string",
-            "value": "[concat('https://', variables('Application'), '.', reference(resourceId('Microsoft.App/managedEnvironments', parameters('environmentName'))).defaultDomain)]"
-        }
-    }
+    ]
 }
