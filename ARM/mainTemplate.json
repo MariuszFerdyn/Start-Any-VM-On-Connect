@@ -2,7 +2,7 @@
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "metadata": {
-        "description": "ARM Template for Start-Any-VM-On-Connect HAProxy configuration"
+        "description": "ARM Template for Container App and VM configuration"
     },
     "parameters": {
         "environmentName": {
@@ -18,161 +18,189 @@
                 "description": "Location for all resources"
             }
         },
+        "vnetAddressPrefix": {
+            "type": "string",
+            "defaultValue": "10.0.0.0/16",
+            "metadata": {
+                "description": "Address space for virtual network"
+            }
+        },
+        "caSubnetPrefix": {
+            "type": "string",
+            "defaultValue": "10.0.0.0/23",
+            "metadata": {
+                "description": "Subnet prefix for Container Apps"
+            }
+        },
+        "vmSubnetPrefix": {
+            "type": "string",
+            "defaultValue": "10.0.2.0/24",
+            "metadata": {
+                "description": "Subnet prefix for Virtual Machines"
+            }
+        },
+        "adminUsername": {
+            "type": "string",
+            "metadata": {
+                "description": "Username for the Virtual Machine"
+            }
+        },
+        "adminPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Password for the Virtual Machine"
+            }
+        },
+        "vmSize": {
+            "type": "string",
+            "defaultValue": "Standard_D2s_v3",
+            "metadata": {
+                "description": "Size of the Virtual Machine"
+            }
+        },
+        "osType": {
+            "type": "string",
+            "defaultValue": "Ubuntu2204",
+            "allowedValues": [
+                "Ubuntu2204",
+                "Windows2022"
+            ],
+            "metadata": {
+                "description": "Type of OS for the Virtual Machine"
+            }
+        },
         "LOCAL_PORT1": {
             "type": "string",
             "defaultValue": "80",
             "metadata": {
                 "description": "Local port 1 (mandatory)"
             }
-        },
-        "BACKEND_HOST1": {
-            "type": "string",
-            "defaultValue": "212.77.98.9:80",
-            "metadata": {
-                "description": "Backend host 1 (mandatory)"
-            }
-        },
-        "LOCAL_PORT2": {
-            "type": "string",
-            "defaultValue": "443",
-            "metadata": {
-                "description": "Local port 2"
-            }
-        },
-        "BACKEND_HOST2": {
-            "type": "string",
-            "defaultValue": "108.138.7.70:443",
-            "metadata": {
-                "description": "Backend host 2"
-            }
-        },
-        "LOCAL_PORT3": {
-            "type": "string",
-            "defaultValue": "",
-            "metadata": {
-                "description": "Local port 3"
-            }
-        },
-        "BACKEND_HOST3": {
-            "type": "string",
-            "defaultValue": "",
-            "metadata": {
-                "description": "Backend host 3"
-            }
-        },
-        "LOCAL_PORT4": {
-            "type": "string",
-            "defaultValue": "",
-            "metadata": {
-                "description": "Local port 4"
-            }
-        },
-        "BACKEND_HOST4": {
-            "type": "string",
-            "defaultValue": "",
-            "metadata": {
-                "description": "Backend host 4"
-            }
-        },
-        "LOCAL_PORT5": {
-            "type": "string",
-            "defaultValue": "",
-            "metadata": {
-                "description": "Local port 5"
-            }
-        },
-        "BACKEND_HOST5": {
-            "type": "string",
-            "defaultValue": "",
-            "metadata": {
-                "description": "Backend host 5"
-            }
-        },
-        "LOCAL_PORT6": {
-            "type": "string",
-            "defaultValue": "",
-            "metadata": {
-                "description": "Local port 6"
-            }
-        },
-        "BACKEND_HOST6": {
-            "type": "string",
-            "defaultValue": "",
-            "metadata": {
-                "description": "Backend host 6"
-            }
-        },
-        "LOCAL_PORT7": {
-            "type": "string",
-            "defaultValue": "",
-            "metadata": {
-                "description": "Local port 7"
-            }
-        },
-        "BACKEND_HOST7": {
-            "type": "string",
-            "defaultValue": "",
-            "metadata": {
-                "description": "Backend host 7"
-            }
-        },
-        "LOCAL_PORT8": {
-            "type": "string",
-            "defaultValue": "",
-            "metadata": {
-                "description": "Local port 8"
-            }
-        },
-        "BACKEND_HOST8": {
-            "type": "string",
-            "defaultValue": "",
-            "metadata": {
-                "description": "Backend host 8"
-            }
-        },
-        "LOCAL_PORT9": {
-            "type": "string",
-            "defaultValue": "",
-            "metadata": {
-                "description": "Local port 9"
-            }
-        },
-        "BACKEND_HOST9": {
-            "type": "string",
-            "defaultValue": "",
-            "metadata": {
-                "description": "Backend host 9"
-            }
-        },
-        "LOCAL_PORT10": {
-            "type": "string",
-            "defaultValue": "",
-            "metadata": {
-                "description": "Local port 10"
-            }
-        },
-        "BACKEND_HOST10": {
-            "type": "string",
-            "defaultValue": "",
-            "metadata": {
-                "description": "Backend host 10"
-            }
         }
     },
     "variables": {
-        "appName": "[concat(parameters('environmentName'), '-app')]"
+        "appName": "[concat(parameters('environmentName'), '-app')]",
+        "vnetName": "[concat(parameters('environmentName'), '-vnet')]",
+        "vmName": "[concat(parameters('environmentName'), '-vm01')]",
+        "nicName": "[concat(variables('vmName'), '-nic')]",
+        "caSubnetName": "CA-subnet",
+        "vmSubnetName": "VM-subnet",
+        "imageReference": {
+            "Ubuntu2204": {
+                "publisher": "Canonical",
+                "offer": "0001-com-ubuntu-server-jammy",
+                "sku": "22_04-lts-gen2",
+                "version": "latest"
+            },
+            "Windows2022": {
+                "publisher": "MicrosoftWindowsServer",
+                "offer": "WindowsServer",
+                "sku": "2022-Datacenter",
+                "version": "latest"
+            }
+        }
     },
     "resources": [
         {
+            "type": "Microsoft.Network/virtualNetworks",
+            "apiVersion": "2023-05-01",
+            "name": "[variables('vnetName')]",
+            "location": "[parameters('location')]",
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "[parameters('vnetAddressPrefix')]"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "[variables('caSubnetName')]",
+                        "properties": {
+                            "addressPrefix": "[parameters('caSubnetPrefix')]"
+                        }
+                    },
+                    {
+                        "name": "[variables('vmSubnetName')]",
+                        "properties": {
+                            "addressPrefix": "[parameters('vmSubnetPrefix')]"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2023-05-01",
+            "name": "[variables('nicName')]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('vnetName'), variables('vmSubnetName'))]"
+                            },
+                            "privateIPAllocationMethod": "Dynamic"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines",
+            "apiVersion": "2023-07-01",
+            "name": "[variables('vmName')]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkInterfaces', variables('nicName'))]"
+            ],
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "[parameters('vmSize')]"
+                },
+                "osProfile": {
+                    "computerName": "[variables('vmName')]",
+                    "adminUsername": "[parameters('adminUsername')]",
+                    "adminPassword": "[parameters('adminPassword')]"
+                },
+                "storageProfile": {
+                    "imageReference": "[variables('imageReference')[parameters('osType')]]",
+                    "osDisk": {
+                        "createOption": "FromImage",
+                        "managedDisk": {
+                            "storageAccountType": "Premium_LRS"
+                        }
+                    }
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('nicName'))]"
+                        }
+                    ]
+                }
+            }
+        },
+        {
             "type": "Microsoft.App/managedEnvironments",
             "apiVersion": "2023-05-01",
-            "name": "[parameters('environmentName')]",
+            "name": "[concat(parameters('environmentName'), '-vnet')]",
             "location": "[parameters('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]"
+            ],
             "sku": {
                 "name": "Consumption"
             },
             "properties": {
-                "zoneRedundant": false
+                "zoneRedundant": false,
+                "vnetConfiguration": {
+                    "infrastructureSubnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('vnetName'), variables('caSubnetName'))]",
+                    "internal": false
+                }
             }
         },
         {
@@ -181,16 +209,17 @@
             "name": "[variables('appName')]",
             "location": "[parameters('location')]",
             "dependsOn": [
-                "[resourceId('Microsoft.App/managedEnvironments', parameters('environmentName'))]"
+                "[resourceId('Microsoft.App/managedEnvironments', concat(parameters('environmentName'), '-vnet'))]",
+                "[resourceId('Microsoft.Network/networkInterfaces', variables('nicName'))]"
             ],
             "properties": {
-                "managedEnvironmentId": "[resourceId('Microsoft.App/managedEnvironments', parameters('environmentName'))]",
+                "managedEnvironmentId": "[resourceId('Microsoft.App/managedEnvironments', concat(parameters('environmentName'), '-vnet'))]",
                 "configuration": {
                     "activeRevisionsMode": "Single",
                     "ingress": {
-                        "external": false,
-                        "targetPort": 3306,
-                        "exposedPort": 3306,
+                        "external": true,
+                        "targetPort": "[int(parameters('LOCAL_PORT1'))]",
+                        "exposedPort": "[int(parameters('LOCAL_PORT1'))]",
                         "transport": "Tcp",
                         "traffic": [
                             {
@@ -212,26 +241,8 @@
                                 },
                                 {
                                     "name": "BACKEND_HOST1",
-                                    "value": "[parameters('BACKEND_HOST1')]"
-                                },
-                                "[if(not(empty(parameters('LOCAL_PORT2'))), createObject('name', 'LOCAL_PORT2', 'value', parameters('LOCAL_PORT2')), json('null'))]",
-                                "[if(not(empty(parameters('BACKEND_HOST2'))), createObject('name', 'BACKEND_HOST2', 'value', parameters('BACKEND_HOST2')), json('null'))]",
-                                "[if(not(empty(parameters('LOCAL_PORT3'))), createObject('name', 'LOCAL_PORT3', 'value', parameters('LOCAL_PORT3')), json('null'))]",
-                                "[if(not(empty(parameters('BACKEND_HOST3'))), createObject('name', 'BACKEND_HOST3', 'value', parameters('BACKEND_HOST3')), json('null'))]",
-                                "[if(not(empty(parameters('LOCAL_PORT4'))), createObject('name', 'LOCAL_PORT4', 'value', parameters('LOCAL_PORT4')), json('null'))]",
-                                "[if(not(empty(parameters('BACKEND_HOST4'))), createObject('name', 'BACKEND_HOST4', 'value', parameters('BACKEND_HOST4')), json('null'))]",
-                                "[if(not(empty(parameters('LOCAL_PORT5'))), createObject('name', 'LOCAL_PORT5', 'value', parameters('LOCAL_PORT5')), json('null'))]",
-                                "[if(not(empty(parameters('BACKEND_HOST5'))), createObject('name', 'BACKEND_HOST5', 'value', parameters('BACKEND_HOST5')), json('null'))]",
-                                "[if(not(empty(parameters('LOCAL_PORT6'))), createObject('name', 'LOCAL_PORT6', 'value', parameters('LOCAL_PORT6')), json('null'))]",
-                                "[if(not(empty(parameters('BACKEND_HOST6'))), createObject('name', 'BACKEND_HOST6', 'value', parameters('BACKEND_HOST6')), json('null'))]",
-                                "[if(not(empty(parameters('LOCAL_PORT7'))), createObject('name', 'LOCAL_PORT7', 'value', parameters('LOCAL_PORT7')), json('null'))]",
-                                "[if(not(empty(parameters('BACKEND_HOST7'))), createObject('name', 'BACKEND_HOST7', 'value', parameters('BACKEND_HOST7')), json('null'))]",
-                                "[if(not(empty(parameters('LOCAL_PORT8'))), createObject('name', 'LOCAL_PORT8', 'value', parameters('LOCAL_PORT8')), json('null'))]",
-                                "[if(not(empty(parameters('BACKEND_HOST8'))), createObject('name', 'BACKEND_HOST8', 'value', parameters('BACKEND_HOST8')), json('null'))]",
-                                "[if(not(empty(parameters('LOCAL_PORT9'))), createObject('name', 'LOCAL_PORT9', 'value', parameters('LOCAL_PORT9')), json('null'))]",
-                                "[if(not(empty(parameters('BACKEND_HOST9'))), createObject('name', 'BACKEND_HOST9', 'value', parameters('BACKEND_HOST9')), json('null'))]",
-                                "[if(not(empty(parameters('LOCAL_PORT10'))), createObject('name', 'LOCAL_PORT10', 'value', parameters('LOCAL_PORT10')), json('null'))]",
-                                "[if(not(empty(parameters('BACKEND_HOST10'))), createObject('name', 'BACKEND_HOST10', 'value', parameters('BACKEND_HOST10')), json('null'))]"
+                                    "value": "[concat(reference(variables('nicName')).ipConfigurations[0].properties.privateIPAddress, ':', parameters('LOCAL_PORT1'))]"
+                                }
                             ],
                             "resources": {
                                 "cpu": "0.5",
