@@ -18,6 +18,13 @@
                 "description": "Location for all resources"
             }
         },
+        "useHttpIngress": {
+            "type": "bool",
+            "defaultValue": false,
+            "metadata": {
+                "description": "Enable HTTP/HTTPS ingress"
+            }
+        },
         "vnetAddressPrefix": {
             "type": "string",
             "defaultValue": "10.0.0.0/16",
@@ -97,6 +104,24 @@
                 "sku": "2022-Datacenter",
                 "version": "latest"
             }
+        },
+        "defaultIngress": {
+            "external": true,
+            "targetPort": "[int(parameters('LOCAL_PORT1'))]",
+            "exposedPort": "[int(parameters('LOCAL_PORT1'))]",
+            "transport": "Tcp",
+            "traffic": [
+                {
+                    "weight": 100,
+                    "latestRevision": true
+                }
+            ]
+        },
+        "httpIngress": {
+            "external": true,
+            "targetPort": 80,
+            "transport": "auto",
+            "allowInsecure": true
         }
     },
     "resources": [
@@ -216,18 +241,7 @@
                 "managedEnvironmentId": "[resourceId('Microsoft.App/managedEnvironments', concat(parameters('environmentName'), '-vnet'))]",
                 "configuration": {
                     "activeRevisionsMode": "Single",
-                    "ingress": {
-                        "external": true,
-                        "targetPort": "[int(parameters('LOCAL_PORT1'))]",
-                        "exposedPort": "[int(parameters('LOCAL_PORT1'))]",
-                        "transport": "Tcp",
-                        "traffic": [
-                            {
-                                "weight": 100,
-                                "latestRevision": true
-                            }
-                        ]
-                    }
+                    "ingress": "[if(parameters('useHttpIngress'), variables('httpIngress'), variables('defaultIngress'))]"
                 },
                 "template": {
                     "containers": [
@@ -242,6 +256,22 @@
                                 {
                                     "name": "BACKEND_HOST1",
                                     "value": "[concat(reference(variables('nicName')).ipConfigurations[0].properties.privateIPAddress, ':', parameters('LOCAL_PORT1'))]"
+                                },
+                                {
+                                    "name": "LOCAL_PORT6",
+                                    "value": "[if(parameters('useHttpIngress'), '80', parameters('LOCAL_PORT1'))]"
+                                },
+                                {
+                                    "name": "BACKEND_HOST6",
+                                    "value": "[if(parameters('useHttpIngress'), concat(reference(variables('nicName')).ipConfigurations[0].properties.privateIPAddress, ':80'), concat(reference(variables('nicName')).ipConfigurations[0].properties.privateIPAddress, ':', parameters('LOCAL_PORT1')))]"
+                                },
+                                {
+                                    "name": "LOCAL_PORT7",
+                                    "value": "[if(parameters('useHttpIngress'), '443', '')]"
+                                },
+                                {
+                                    "name": "BACKEND_HOST7",
+                                    "value": "[if(parameters('useHttpIngress'), concat(reference(variables('nicName')).ipConfigurations[0].properties.privateIPAddress, ':443'), '')]"
                                 }
                             ],
                             "resources": {
