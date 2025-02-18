@@ -73,7 +73,7 @@
                 "Windows2022"
             ],
             "metadata": {
-                "description": "Type of OS for the Virtual Machine"
+                "description": "Type of OS for the Virtual Machine"  
             }
         },
         "LOCAL_PORT1": {
@@ -82,11 +82,39 @@
             "metadata": {
                 "description": "Local port 1 (mandatory)"
             }
+        },
+        "LOCAL_PORT2": {
+            "type": "string",
+            "defaultValue": "81",
+            "metadata": {
+                "description": "Local port 2"
+            }
+        },
+        "LOCAL_PORT3": {
+            "type": "string",
+            "defaultValue": "82",
+            "metadata": {
+                "description": "Local port 3"
+            }
+        },
+        "LOCAL_PORT4": {
+            "type": "string",
+            "defaultValue": "83",
+            "metadata": {
+                "description": "Local port 4"
+            }
+        },
+        "LOCAL_PORT5": {
+            "type": "string",
+            "defaultValue": "84", 
+            "metadata": {
+                "description": "Local port 5"
+            }
         }
     },
     "variables": {
         "appName": "[concat(parameters('environmentName'), '-app')]",
-        "vnetName": "[concat(parameters('environmentName'), '-vnet')]",
+        "vnetName": "[concat(parameters('environmentName'), '-vnet')]", 
         "vmName": "[concat(parameters('environmentName'), '-vm01')]",
         "nicName": "[concat(variables('vmName'), '-nic')]",
         "caSubnetName": "CA-subnet",
@@ -100,7 +128,7 @@
             },
             "Windows2022": {
                 "publisher": "MicrosoftWindowsServer",
-                "offer": "WindowsServer",
+                "offer": "WindowsServer", 
                 "sku": "2022-Datacenter",
                 "version": "latest"
             }
@@ -115,13 +143,74 @@
                     "weight": 100,
                     "latestRevision": true
                 }
-            ]
+            ],
+            "allowInsecure": false,
+            "stickySessions": {
+                "affinity": "none"
+            },
+            "additionalPortMappings": [
+                {
+                    "external": true,
+                    "targetPort": "[int(parameters('LOCAL_PORT2'))]",
+                    "exposedPort": "[int(parameters('LOCAL_PORT2'))]"
+                },
+                {
+                    "external": true,
+                    "targetPort": "[int(parameters('LOCAL_PORT3'))]",
+                    "exposedPort": "[int(parameters('LOCAL_PORT3'))]"
+                },
+                {
+                    "external": true,
+                    "targetPort": "[int(parameters('LOCAL_PORT4'))]",
+                    "exposedPort": "[int(parameters('LOCAL_PORT4'))]"
+                },
+                {
+                    "external": true,
+                    "targetPort": "[int(parameters('LOCAL_PORT5'))]",
+                    "exposedPort": "[int(parameters('LOCAL_PORT5'))]"
+                }
+            ],
+            "customDomains": null,
+            "ipSecurityRestrictions": null,
+            "corsPolicy": null,
+            "clientCertificateMode": null,
+            "targetPortHttpScheme": null
         },
         "httpIngress": {
             "external": true,
             "targetPort": 80,
             "transport": "auto",
-            "allowInsecure": true
+            "allowInsecure": true,
+            "stickySessions": {
+                "affinity": "none"
+            },
+            "additionalPortMappings": [
+                {
+                    "external": true,
+                    "targetPort": "[int(parameters('LOCAL_PORT2'))]",
+                    "exposedPort": "[int(parameters('LOCAL_PORT2'))]"
+                },
+                {
+                    "external": true,
+                    "targetPort": "[int(parameters('LOCAL_PORT3'))]",
+                    "exposedPort": "[int(parameters('LOCAL_PORT3'))]"
+                },
+                {
+                    "external": true,
+                    "targetPort": "[int(parameters('LOCAL_PORT4'))]",
+                    "exposedPort": "[int(parameters('LOCAL_PORT4'))]"
+                },
+                {
+                    "external": true,
+                    "targetPort": "[int(parameters('LOCAL_PORT5'))]",
+                    "exposedPort": "[int(parameters('LOCAL_PORT5'))]"
+                }
+            ],
+            "customDomains": null,
+            "ipSecurityRestrictions": null,
+            "corsPolicy": null,
+            "clientCertificateMode": null,
+            "targetPortHttpScheme": null
         }
     },
     "resources": [
@@ -208,10 +297,10 @@
                     ]
                 }
             }
-        },
+        },  
         {
             "type": "Microsoft.App/managedEnvironments",
-            "apiVersion": "2023-05-01",
+            "apiVersion": "2024-02-02-preview",
             "name": "[concat(parameters('environmentName'), '-vnet')]",
             "location": "[parameters('location')]",
             "dependsOn": [
@@ -230,7 +319,7 @@
         },
         {
             "type": "Microsoft.App/containerApps",
-            "apiVersion": "2023-05-01",
+            "apiVersion": "2024-02-02-preview",
             "name": "[variables('appName')]",
             "location": "[parameters('location')]",
             "dependsOn": [
@@ -239,11 +328,13 @@
             ],
             "properties": {
                 "managedEnvironmentId": "[resourceId('Microsoft.App/managedEnvironments', concat(parameters('environmentName'), '-vnet'))]",
+                "environmentId": "[resourceId('Microsoft.App/managedEnvironments', concat(parameters('environmentName'), '-vnet'))]",
                 "configuration": {
                     "activeRevisionsMode": "Single",
                     "ingress": "[if(parameters('useHttpIngress'), variables('httpIngress'), variables('defaultIngress'))]"
                 },
                 "template": {
+                    "revisionSuffix": "",
                     "containers": [
                         {
                             "name": "app",
@@ -251,11 +342,43 @@
                             "env": [
                                 {
                                     "name": "LOCAL_PORT1",
-                                    "value": "[parameters('LOCAL_PORT1')]"
+                                    "value": "[parameters('LOCAL_PORT1')]"  
                                 },
                                 {
                                     "name": "BACKEND_HOST1",
                                     "value": "[concat(reference(variables('nicName')).ipConfigurations[0].properties.privateIPAddress, ':', parameters('LOCAL_PORT1'))]"
+                                },
+                                {
+                                    "name": "LOCAL_PORT2",
+                                    "value": "[parameters('LOCAL_PORT2')]"
+                                },
+                                {
+                                    "name": "BACKEND_HOST2",
+                                    "value": "[concat(reference(variables('nicName')).ipConfigurations[0].properties.privateIPAddress, ':', parameters('LOCAL_PORT2'))]"
+                                },
+                                {
+                                    "name": "LOCAL_PORT3", 
+                                    "value": "[parameters('LOCAL_PORT3')]"
+                                },
+                                {
+                                    "name": "BACKEND_HOST3",
+                                    "value": "[concat(reference(variables('nicName')).ipConfigurations[0].properties.privateIPAddress, ':', parameters('LOCAL_PORT3'))]"
+                                },
+                                {
+                                    "name": "LOCAL_PORT4",
+                                    "value": "[parameters('LOCAL_PORT4')]"
+                                },
+                                {  
+                                    "name": "BACKEND_HOST4",
+                                    "value": "[concat(reference(variables('nicName')).ipConfigurations[0].properties.privateIPAddress, ':', parameters('LOCAL_PORT4'))]"
+                                },
+                                {
+                                    "name": "LOCAL_PORT5",
+                                    "value": "[parameters('LOCAL_PORT5')]"
+                                },
+                                {
+                                    "name": "BACKEND_HOST5",
+                                    "value": "[concat(reference(variables('nicName')).ipConfigurations[0].properties.privateIPAddress, ':', parameters('LOCAL_PORT5'))]"
                                 },
                                 {
                                     "name": "LOCAL_PORT6",
@@ -266,25 +389,32 @@
                                     "value": "[if(parameters('useHttpIngress'), concat(reference(variables('nicName')).ipConfigurations[0].properties.privateIPAddress, ':80'), concat(reference(variables('nicName')).ipConfigurations[0].properties.privateIPAddress, ':', parameters('LOCAL_PORT1')))]"
                                 },
                                 {
-                                    "name": "LOCAL_PORT7",
+                                    "name": "LOCAL_PORT7", 
                                     "value": "[if(parameters('useHttpIngress'), '443', '')]"
                                 },
                                 {
                                     "name": "BACKEND_HOST7",
-                                    "value": "[if(parameters('useHttpIngress'), concat(reference(variables('nicName')).ipConfigurations[0].properties.privateIPAddress, ':443'), '')]"
+                                    "value": "[if(parameters('useHttpIngress'), concat(reference(variables('nicName')).ipConfigurations[0].properties.privateIPAddress, ':443'), '')]" 
                                 }
                             ],
                             "resources": {
-                                "cpu": "0.5",
+                                "cpu": 0.5,
                                 "memory": "1Gi"
                             }
                         }
                     ],
                     "scale": {
                         "minReplicas": 0,
-                        "maxReplicas": 1
-                    }
+                        "maxReplicas": 1,
+                        "rules": null
+                    },
+                    "volumes": null,
+                    "initContainers": null,
+                    "serviceBinds": null
                 }
+            },
+            "identity": {
+                "type": "None"
             }
         }
     ]
