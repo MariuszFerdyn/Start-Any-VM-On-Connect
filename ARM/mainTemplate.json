@@ -78,7 +78,7 @@
         },
         "LOCAL_PORT1": {
             "type": "string",
-            "defaultValue": "80",
+            "defaultValue": "8080",
             "metadata": {
                 "description": "Local port 1 (mandatory)"
             }
@@ -178,7 +178,7 @@
         },
         "httpIngress": {
             "external": true,
-            "targetPort": 80,
+            "targetPort": "[int(parameters('LOCAL_PORT1'))]",
             "transport": "auto",
             "allowInsecure": true,
             "stickySessions": {
@@ -342,11 +342,15 @@
                             "env": [
                                 {
                                     "name": "LOCAL_PORT1",
+<<<<<<< HEAD
+                                    "value": "[if(not(parameters('useHttpIngress')), parameters('LOCAL_PORT1'), '')]"
+=======
                                     "value": "[parameters('LOCAL_PORT1')]"  
+>>>>>>> 9d14e883ff99d20ba40d74f973aae3b0876b150d
                                 },
                                 {
                                     "name": "BACKEND_HOST1",
-                                    "value": "[concat(reference(variables('nicName')).ipConfigurations[0].properties.privateIPAddress, ':', parameters('LOCAL_PORT1'))]"
+                                    "value": "[if(not(parameters('useHttpIngress')), concat(reference(variables('nicName')).ipConfigurations[0].properties.privateIPAddress, ':', parameters('LOCAL_PORT1')), '')]"
                                 },
                                 {
                                     "name": "LOCAL_PORT2",
@@ -382,10 +386,13 @@
                                 },
                                 {
                                     "name": "LOCAL_PORT6",
-                                    "value": "[if(parameters('useHttpIngress'), '80', parameters('LOCAL_PORT1'))]"
+                                    "value": "[if(parameters('useHttpIngress'),  parameters('LOCAL_PORT1'), '')]"
                                 },
                                 {
                                     "name": "BACKEND_HOST6",
+<<<<<<< HEAD
+                                    "value": "[if(parameters('useHttpIngress'), concat(reference(variables('nicName')).ipConfigurations[0].properties.privateIPAddress, ':', parameters('LOCAL_PORT1')), '')]"
+=======
                                     "value": "[if(parameters('useHttpIngress'), concat(reference(variables('nicName')).ipConfigurations[0].properties.privateIPAddress, ':80'), concat(reference(variables('nicName')).ipConfigurations[0].properties.privateIPAddress, ':', parameters('LOCAL_PORT1')))]"
                                 },
                                 {
@@ -395,6 +402,7 @@
                                 {
                                     "name": "BACKEND_HOST7",
                                     "value": "[if(parameters('useHttpIngress'), concat(reference(variables('nicName')).ipConfigurations[0].properties.privateIPAddress, ':443'), '')]" 
+>>>>>>> 9d14e883ff99d20ba40d74f973aae3b0876b150d
                                 }
                             ],
                             "resources": {
