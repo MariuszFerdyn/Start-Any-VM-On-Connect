@@ -116,7 +116,7 @@
         },
         "httpIngress": {
             "external": true,
-            "targetPort": 80,
+            "targetPort": "[int(parameters('LOCAL_PORT1'))]",
             "transport": "auto",
             "allowInsecure": true
         }
