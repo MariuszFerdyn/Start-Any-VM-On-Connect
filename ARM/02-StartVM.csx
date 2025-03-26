@@ -284,6 +284,10 @@
                                 {
                                     "name": "BACKEND_HOST6",
                                     "value": "[if(parameters('useHttpIngress'), concat(reference(variables('nicName')).ipConfigurations[0].properties.privateIPAddress, ':', parameters('LOCAL_PORT1')), '')]"
+                                },
+                                {
+                                    "name": "WEBHOOKAFTERSTART",
+                                    "value": "[concat('https://', reference(resourceId('Microsoft.Web/sites', parameters('functionAppName'))).defaultHostName, '/api/StartVM?code=', listKeys(concat(resourceId('Microsoft.Web/sites', parameters('functionAppName')), '/host/default'), '2018-11-01').functionKeys.default)]"
                                 }
                             ],
                             "resources": {
