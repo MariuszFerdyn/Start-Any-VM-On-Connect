@@ -74,10 +74,17 @@
             }
         },
         "LOCAL_PORT1": {
-            "defaultValue": "8080",
+            "defaultValue": "2222",
             "type": "String",
             "metadata": {
-                "description": "Local port 1 (mandatory)"
+                "description": "Local port 1 (mandatory) External. Others can be added in Azure Portal in Ingress."
+            }
+        },
+        "INTERNAL_PORT1": {
+            "defaultValue": "22",
+            "type": "String",
+            "metadata": {
+                "description": "Internal port 1 (mandatory) Internal Others can be added in Azure Portal in Ingress."
             }
         },
         "functionAppName": {
@@ -277,7 +284,7 @@
                                 },
                                 {
                                     "name": "BACKEND_HOST1",
-                                    "value": "[if(not(parameters('useHttpIngress')), concat(reference(variables('nicName')).ipConfigurations[0].properties.privateIPAddress, ':', parameters('LOCAL_PORT1')), '')]"
+                                    "value": "[if(not(parameters('useHttpIngress')), concat(reference(variables('nicName')).ipConfigurations[0].properties.privateIPAddress, ':', parameters('INTERNAL_PORT1')), '')]"
                                 },
                                 {
                                     "name": "LOCAL_PORT6",
@@ -285,7 +292,7 @@
                                 },
                                 {
                                     "name": "BACKEND_HOST6",
-                                    "value": "[if(parameters('useHttpIngress'), concat(reference(variables('nicName')).ipConfigurations[0].properties.privateIPAddress, ':', parameters('LOCAL_PORT1')), '')]"
+                                    "value": "[if(parameters('useHttpIngress'), concat(reference(variables('nicName')).ipConfigurations[0].properties.privateIPAddress, ':', parameters('INTERNAL_PORT1')), '')]"
                                 },
                                 {
                                     "name": "WEBHOOKAFTERSTART",
