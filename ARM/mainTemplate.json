@@ -107,6 +107,13 @@
             "metadata": {
                 "description": "Name of App Service Plan for Function App"
             }
+        },
+        "containerAppName": {
+            "type": "String",
+            "defaultValue": "[concat(parameters('environmentName'), '-app')]",
+            "metadata": {
+                "description": "Name of the Container App"
+            }
         }
     },
     "variables": {
@@ -276,7 +283,7 @@
                     "containers": [
                         {
                             "name": "app",
-                            "image": "mafamafa/haproxy-env-config:202501271157",
+                            "image": "mafamafa/haproxy-env-config:202504021902",
                             "env": [
                                 {
                                     "name": "LOCAL_PORT1",
@@ -312,6 +319,82 @@
                 }
             }
         },
+{
+    "type": "Microsoft.Resources/deployments",
+    "apiVersion": "2022-09-01",
+    "name": "updateContainerAppWithWebhook",
+    "dependsOn": [
+        "[resourceId('Microsoft.App/containerApps', variables('appName'))]"
+    ],
+    "properties": {
+        "mode": "Incremental",
+        "template": {
+            "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+            "contentVersion": "1.0.0.0",
+            "resources": [
+                {
+                    "type": "Microsoft.App/containerApps",
+                    "apiVersion": "2023-05-01",
+                    "name": "[variables('appName')]",
+                    "location": "[parameters('location')]",
+                    "properties": {
+                        "managedEnvironmentId": "[resourceId('Microsoft.App/managedEnvironments', concat(parameters('environmentName'), '-vnet'))]",
+                        "configuration": {
+                            "activeRevisionsMode": "Single",
+                            "ingress": "[if(parameters('useHttpIngress'), variables('httpIngress'), variables('defaultIngress'))]"
+                        },
+                        "template": {
+                            "containers": [
+                                {
+                                    "name": "app",
+                                    "image": "mafamafa/haproxy-env-config:202504021902",
+                                    "env": [
+                                        {
+                                            "name": "LOCAL_PORT1",
+                                            "value": "[if(not(parameters('useHttpIngress')), parameters('LOCAL_PORT1'), '')]"
+                                        },
+                                        {
+                                            "name": "BACKEND_HOST1",
+                                            "value": "[if(not(parameters('useHttpIngress')), concat(reference(variables('nicName')).ipConfigurations[0].properties.privateIPAddress, ':', parameters('INTERNAL_PORT1')), '')]"
+                                        },
+                                        {
+                                            "name": "LOCAL_PORT6",
+                                            "value": "[if(parameters('useHttpIngress'), parameters('LOCAL_PORT1'), '')]"
+                                        },
+                                        {
+                                            "name": "BACKEND_HOST6",
+                                            "value": "[if(parameters('useHttpIngress'), concat(reference(variables('nicName')).ipConfigurations[0].properties.privateIPAddress, ':', parameters('INTERNAL_PORT1')), '')]"
+                                        },
+                                        {
+                                            "name": "WEBHOOKAFTERSTART",
+                                            "value": "[concat('https://', reference(resourceId('Microsoft.Web/sites', parameters('functionAppName'))).defaultHostName, '/api/StartVM?code=', listKeys(concat(resourceId('Microsoft.Web/sites', parameters('functionAppName')), '/host/default'), '2018-11-01').functionKeys.default)]"
+                                        },
+                                        {
+                                            "name": "WEBHOOKTRAFFIC",
+                                            "value": "[concat('https://', reference(resourceId('Microsoft.App/containerApps', variables('appName'))).configuration.ingress.fqdn, ':', reference(resourceId('Microsoft.App/containerApps', variables('appName'))).configuration.ingress.targetPort)]"
+                                        },
+                                        {
+                                            "name": "WEBHOOKTRAFFICAMOUNT",
+                                            "value": "90"
+                                        }
+                                    ],
+                                    "resources": {
+                                        "cpu": "0.5",
+                                        "memory": "1Gi"
+                                    }
+                                }
+                            ],
+                            "scale": {
+                                "minReplicas": 0,
+                                "maxReplicas": 1
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    }
+},
 {
             "type": "Microsoft.Storage/storageAccounts",
             "apiVersion": "2022-09-01",
