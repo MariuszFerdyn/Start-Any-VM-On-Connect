@@ -266,7 +266,7 @@
         },
         {
             "type": "Microsoft.App/containerApps",
-            "apiVersion": "2023-05-01",
+            "apiVersion": "2025-01-01",
             "name": "[variables('appName')]",
             "location": "[parameters('location')]",
             "dependsOn": [
@@ -314,7 +314,9 @@
                     ],
                     "scale": {
                         "minReplicas": 0,
-                        "maxReplicas": 1
+                        "maxReplicas": 1,
+                        "cooldownPeriod": 500,
+                        "pollingInterval": 200
                     }
                 }
             }
@@ -334,7 +336,7 @@
             "resources": [
                 {
                     "type": "Microsoft.App/containerApps",
-                    "apiVersion": "2023-05-01",
+                    "apiVersion": "2025-01-01",
                     "name": "[variables('appName')]",
                     "location": "[parameters('location')]",
                     "properties": {
@@ -386,7 +388,9 @@
                             ],
                             "scale": {
                                 "minReplicas": 0,
-                                "maxReplicas": 1
+                                "maxReplicas": 1,
+                                "cooldownPeriod": 500,
+                                "pollingInterval": 200
                             }
                         }
                     }
